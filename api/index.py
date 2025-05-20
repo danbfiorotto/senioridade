@@ -690,15 +690,19 @@ class handler(BaseHTTPRequestHandler):
                 }
 
                 function compareLists(oldList, newList) {
-                    const oldREs = new Set(oldList.map(item => item.RE));
-                    const newREs = new Set(newList.map(item => item.RE));
+                    // Considera apenas registros com RE válido
+                    const oldValid = oldList.filter(item => item.RE && String(item.RE).trim() !== '');
+                    const newValid = newList.filter(item => item.RE && String(item.RE).trim() !== '');
 
-                    const entries = newList.filter(item => !oldREs.has(item.RE));
-                    const exits = oldList.filter(item => !newREs.has(item.RE));
+                    const oldREs = new Set(oldValid.map(item => item.RE));
+                    const newREs = new Set(newValid.map(item => item.RE));
+
+                    const entries = newValid.filter(item => !oldREs.has(item.RE));
+                    const exits = oldValid.filter(item => !newREs.has(item.RE));
 
                     return {
-                        total_old: oldList.length,
-                        total_new: newList.length,
+                        total_old: oldValid.length,
+                        total_new: newValid.length,
                         entries: entries,
                         exits: exits
                     };
