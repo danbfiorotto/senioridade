@@ -413,14 +413,12 @@ class handler(BaseHTTPRequestHandler):
             <div class="container">
                 <h1>Comparador de Listas de Senioridade</h1>
                 
-                <!-- Adicionando seção de busca por RE -->
+                <!-- Modificando seção de busca por RE -->
                 <div class="search-section">
-                    <h3>🔍 Buscar por RE</h3>
+                    <h3>Buscar por RE</h3>
                     <div class="search-box">
-                        <input type="text" id="reSearch" placeholder="Digite o RE para buscar">
-                        <button class="button search-button" onclick="searchRE()">Buscar</button>
+                        <input type="text" id="reSearch" placeholder="Digite o RE para buscar (opcional)">
                     </div>
-                    <div id="searchResult" class="search-result"></div>
                 </div>
 
                 <div class="file-input">
@@ -482,6 +480,7 @@ class handler(BaseHTTPRequestHandler):
                 async function processFiles() {
                     const oldFile = document.getElementById('oldFile').files[0];
                     const newFile = document.getElementById('newFile').files[0];
+                    const reInput = document.getElementById('reSearch').value.trim();
                     
                     if (!oldFile || !newFile) {
                         alert('Por favor, selecione ambos os arquivos PDF');
@@ -518,29 +517,19 @@ class handler(BaseHTTPRequestHandler):
                         const comparison = compareLists(oldData, newData);
                         updateStep(3, 'completed');
                         hideLoading();
+
+                        // Se houver um RE para buscar, mostra os resultados da busca primeiro
+                        if (reInput) {
+                            const searchResult = analyzeREChanges(reInput, oldData, newData);
+                            displaySearchResult(searchResult);
+                        }
+                        
+                        // Mostra os resultados da comparação
                         displayResults(comparison);
                     } catch (error) {
                         hideLoading();
                         document.getElementById('result').innerHTML = `<div class="alert error">Erro: ${error.message}</div>`;
                     }
-                }
-
-                function searchRE() {
-                    const reInput = document.getElementById('reSearch').value.trim();
-                    const searchResult = document.getElementById('searchResult');
-                    
-                    if (!reInput) {
-                        searchResult.innerHTML = '<p class="error">Por favor, digite um RE para buscar</p>';
-                        return;
-                    }
-
-                    if (!oldData || !newData) {
-                        searchResult.innerHTML = '<p class="error">Por favor, processe os arquivos PDF primeiro</p>';
-                        return;
-                    }
-
-                    const result = analyzeREChanges(reInput, oldData, newData);
-                    displaySearchResult(result);
                 }
 
                 function analyzeREChanges(re, oldList, newList) {
