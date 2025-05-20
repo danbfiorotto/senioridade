@@ -63,6 +63,7 @@ class handler(BaseHTTPRequestHandler):
         <!DOCTYPE html>
         <html>
         <head>
+            <meta charset="UTF-8">
             <title>Comparador de Listas de Senioridade</title>
             <style>
                 body {
@@ -410,6 +411,9 @@ class handler(BaseHTTPRequestHandler):
             </style>
         </head>
         <body>
+            <div style="text-align:center; margin-bottom: 20px;">
+                <img src="/static/logo.png" alt="Logo Feroz Group" style="max-width:180px; width:100%; height:auto;">
+            </div>
             <div class="container">
                 <h1>Comparador de Listas de Senioridade</h1>
                 
@@ -457,6 +461,10 @@ class handler(BaseHTTPRequestHandler):
                 <div id="searchResult" class="search-result"></div>
                 <div id="result"></div>
             </div>
+
+            <footer style="text-align:center; color:#888; margin-top:40px; font-size:15px;">
+                Site criado pela Feroz Group
+            </footer>
 
             <script>
                 let oldData = null;
