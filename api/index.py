@@ -449,11 +449,12 @@ class handler(BaseHTTPRequestHandler):
                         </div>
                         <div class="step" id="step3">
                             <div class="step-icon">3</div>
-                            <div>Comparação</div>
+                            <div>Comparacao</div>
                         </div>
                     </div>
                 </div>
 
+                <div id="searchResult" class="search-result"></div>
                 <div id="result"></div>
             </div>
 
@@ -465,6 +466,7 @@ class handler(BaseHTTPRequestHandler):
                     const loadingContainer = document.getElementById('loadingContainer');
                     loadingContainer.style.display = 'block';
                     document.getElementById('result').innerHTML = '';
+                    document.getElementById('searchResult').innerHTML = '';
                 }
 
                 function hideLoading() {
@@ -528,7 +530,10 @@ class handler(BaseHTTPRequestHandler):
                         displayResults(comparison);
                     } catch (error) {
                         hideLoading();
-                        document.getElementById('result').innerHTML = `<div class="alert error">Erro: ${error.message}</div>`;
+                        const resultDiv = document.getElementById('result');
+                        if (resultDiv) {
+                            resultDiv.innerHTML = `<div class="alert error">Erro: ${error.message}</div>`;
+                        }
                     }
                 }
 
@@ -584,6 +589,7 @@ class handler(BaseHTTPRequestHandler):
 
                 function displaySearchResult(result) {
                     const searchResult = document.getElementById('searchResult');
+                    if (!searchResult) return;
                     
                     let html = '<div class="search-result-content">';
                     
@@ -623,7 +629,7 @@ class handler(BaseHTTPRequestHandler):
                                         ${createDataTable(result.data.novo)}
                                     </div>
                                     <div class="changes-card">
-                                        <h4>Mudanças:</h4>
+                                        <h4>Mudancas:</h4>
                                         <table class="changes-table">
                                             <thead>
                                                 <tr>
