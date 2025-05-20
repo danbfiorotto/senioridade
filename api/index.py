@@ -4,6 +4,7 @@ import pdfplumber
 import pandas as pd
 import base64
 from io import BytesIO
+import os
 
 def extract_table_from_pdf(pdf_content):
     """
@@ -54,6 +55,27 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"error": str(e)}).encode())
     
     def do_GET(self):
+        if self.path.startswith('/static/'):
+            file_path = self.path.lstrip('/')
+            if os.path.exists(file_path):
+                self.send_response(200)
+                if file_path.endswith('.png'):
+                    self.send_header('Content-type', 'image/png')
+                elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+                    self.send_header('Content-type', 'image/jpeg')
+                elif file_path.endswith('.gif'):
+                    self.send_header('Content-type', 'image/gif')
+                else:
+                    self.send_header('Content-type', 'application/octet-stream')
+                self.end_headers()
+                with open(file_path, 'rb') as f:
+                    self.wfile.write(f.read())
+            else:
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(b'File not found')
+            return
+        
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
