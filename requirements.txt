@@ -1,3 +1,5 @@
+streamlit==1.32.0
 pdfplumber==0.10.3
-pandas==2.1.4
-streamlit==1.29.0 
+pandas==2.2.1
+numpy==1.26.4
+watchdog==3.0.0 
