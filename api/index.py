@@ -288,6 +288,125 @@ class handler(BaseHTTPRequestHandler):
                         width: 100%;
                     }
                 }
+                .loading-container {
+                    display: none;
+                    text-align: center;
+                    padding: 20px;
+                    background-color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    margin: 20px 0;
+                }
+
+                .loading-spinner {
+                    width: 50px;
+                    height: 50px;
+                    border: 5px solid #f3f3f3;
+                    border-top: 5px solid #3498db;
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                    margin: 0 auto 15px;
+                }
+
+                .loading-text {
+                    color: #2c3e50;
+                    font-size: 16px;
+                    margin-bottom: 10px;
+                }
+
+                .loading-progress {
+                    width: 100%;
+                    height: 4px;
+                    background-color: #f3f3f3;
+                    border-radius: 2px;
+                    overflow: hidden;
+                }
+
+                .loading-progress-bar {
+                    height: 100%;
+                    background-color: #3498db;
+                    width: 0%;
+                    transition: width 0.3s ease;
+                    animation: progress 2s ease-in-out infinite;
+                }
+
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+
+                @keyframes progress {
+                    0% { width: 0%; }
+                    50% { width: 100%; }
+                    100% { width: 0%; }
+                }
+
+                .step-indicator {
+                    display: flex;
+                    justify-content: space-between;
+                    margin: 20px 0;
+                    position: relative;
+                }
+
+                .step {
+                    flex: 1;
+                    text-align: center;
+                    padding: 10px;
+                    position: relative;
+                    color: #95a5a6;
+                }
+
+                .step.active {
+                    color: #3498db;
+                    font-weight: bold;
+                }
+
+                .step.completed {
+                    color: #2ecc71;
+                }
+
+                .step::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    right: -50%;
+                    width: 100%;
+                    height: 2px;
+                    background-color: #e0e0e0;
+                    z-index: 1;
+                }
+
+                .step:last-child::after {
+                    display: none;
+                }
+
+                .step.active::after {
+                    background-color: #3498db;
+                }
+
+                .step.completed::after {
+                    background-color: #2ecc71;
+                }
+
+                .step-icon {
+                    display: inline-block;
+                    width: 30px;
+                    height: 30px;
+                    line-height: 30px;
+                    border-radius: 50%;
+                    background-color: #f3f3f3;
+                    margin-bottom: 5px;
+                }
+
+                .step.active .step-icon {
+                    background-color: #3498db;
+                    color: white;
+                }
+
+                .step.completed .step-icon {
+                    background-color: #2ecc71;
+                    color: white;
+                }
             </style>
         </head>
         <body>
@@ -313,12 +432,52 @@ class handler(BaseHTTPRequestHandler):
                     <input type="file" id="newFile" accept=".pdf">
                 </div>
                 <button class="button" onclick="processFiles()">Processar</button>
+
+                <!-- Loading indicator -->
+                <div id="loadingContainer" class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Processando arquivos...</div>
+                    <div class="loading-progress">
+                        <div class="loading-progress-bar"></div>
+                    </div>
+                    <div class="step-indicator">
+                        <div class="step" id="step1">
+                            <div class="step-icon">1</div>
+                            <div>Lista Antiga</div>
+                        </div>
+                        <div class="step" id="step2">
+                            <div class="step-icon">2</div>
+                            <div>Lista Nova</div>
+                        </div>
+                        <div class="step" id="step3">
+                            <div class="step-icon">3</div>
+                            <div>Comparação</div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="result"></div>
             </div>
 
             <script>
                 let oldData = null;
                 let newData = null;
+
+                function showLoading() {
+                    const loadingContainer = document.getElementById('loadingContainer');
+                    loadingContainer.style.display = 'block';
+                    document.getElementById('result').innerHTML = '';
+                }
+
+                function hideLoading() {
+                    const loadingContainer = document.getElementById('loadingContainer');
+                    loadingContainer.style.display = 'none';
+                }
+
+                function updateStep(stepNumber, status) {
+                    const step = document.getElementById(`step${stepNumber}`);
+                    step.className = `step ${status}`;
+                }
 
                 async function processFiles() {
                     const oldFile = document.getElementById('oldFile').files[0];
@@ -329,8 +488,8 @@ class handler(BaseHTTPRequestHandler):
                         return;
                     }
 
-                    const resultDiv = document.getElementById('result');
-                    resultDiv.innerHTML = 'Processando...';
+                    showLoading();
+                    updateStep(1, 'active');
 
                     try {
                         // Process old file
@@ -341,6 +500,8 @@ class handler(BaseHTTPRequestHandler):
                             body: JSON.stringify({ pdf_content: oldContent })
                         });
                         oldData = await oldResponse.json();
+                        updateStep(1, 'completed');
+                        updateStep(2, 'active');
 
                         // Process new file
                         const newContent = await readFileAsBase64(newFile);
@@ -350,12 +511,17 @@ class handler(BaseHTTPRequestHandler):
                             body: JSON.stringify({ pdf_content: newContent })
                         });
                         newData = await newResponse.json();
+                        updateStep(2, 'completed');
+                        updateStep(3, 'active');
 
                         // Compare results
                         const comparison = compareLists(oldData, newData);
+                        updateStep(3, 'completed');
+                        hideLoading();
                         displayResults(comparison);
                     } catch (error) {
-                        resultDiv.innerHTML = 'Erro: ' + error.message;
+                        hideLoading();
+                        document.getElementById('result').innerHTML = `<div class="alert error">Erro: ${error.message}</div>`;
                     }
                 }
 
