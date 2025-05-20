@@ -65,12 +65,118 @@ class handler(BaseHTTPRequestHandler):
         <head>
             <title>Comparador de Listas de Senioridade</title>
             <style>
-                body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-                .container { border: 1px solid #ccc; padding: 20px; border-radius: 5px; }
-                .file-input { margin: 10px 0; }
-                .button { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-                .button:hover { background-color: #45a049; }
-                #result { margin-top: 20px; }
+                body {
+                    font-family: Arial, sans-serif;
+                    max-width: 1200px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f5f5f5;
+                }
+                .container {
+                    background-color: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    padding: 20px;
+                }
+                h1 {
+                    color: #2c3e50;
+                    text-align: center;
+                    margin-bottom: 30px;
+                }
+                .file-input {
+                    margin: 20px 0;
+                    padding: 15px;
+                    background-color: #f8f9fa;
+                    border-radius: 6px;
+                }
+                .file-input h3 {
+                    color: #2c3e50;
+                    margin-bottom: 10px;
+                }
+                .button {
+                    background-color: #3498db;
+                    color: white;
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    font-size: 16px;
+                    transition: background-color 0.3s;
+                    display: block;
+                    margin: 20px auto;
+                }
+                .button:hover {
+                    background-color: #2980b9;
+                }
+                .stats-container {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin: 30px 0;
+                }
+                .stat-box {
+                    background-color: #fff;
+                    padding: 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    text-align: center;
+                }
+                .stat-box h3 {
+                    color: #7f8c8d;
+                    margin: 0;
+                    font-size: 14px;
+                }
+                .stat-number {
+                    color: #2c3e50;
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin: 10px 0 0;
+                }
+                .tables-container {
+                    margin-top: 30px;
+                }
+                .table-section {
+                    margin-bottom: 40px;
+                }
+                .table-section h2 {
+                    color: #2c3e50;
+                    margin-bottom: 20px;
+                }
+                .table-container {
+                    overflow-x: auto;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    background-color: white;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                }
+                th, td {
+                    padding: 12px 15px;
+                    text-align: left;
+                    border-bottom: 1px solid #ddd;
+                }
+                th {
+                    background-color: #f8f9fa;
+                    color: #2c3e50;
+                    font-weight: 600;
+                }
+                tr:hover {
+                    background-color: #f8f9fa;
+                }
+                .no-data {
+                    text-align: center;
+                    color: #7f8c8d;
+                    padding: 20px;
+                }
+                @media (max-width: 768px) {
+                    .stats-container {
+                        grid-template-columns: 1fr;
+                    }
+                    .table-container {
+                        margin: 0 -20px;
+                    }
+                }
             </style>
         </head>
         <body>
@@ -154,18 +260,69 @@ class handler(BaseHTTPRequestHandler):
 
                 function displayResults(comparison) {
                     const resultDiv = document.getElementById('result');
+                    
+                    // Create table HTML for entries
+                    const entriesTable = createTable(comparison.entries, 'Pessoas que Entraram');
+                    const exitsTable = createTable(comparison.exits, 'Pessoas que Saíram');
+                    
                     resultDiv.innerHTML = `
-                        <h2>Resultados</h2>
-                        <p>Total na Lista Antiga: ${comparison.total_old}</p>
-                        <p>Total na Lista Nova: ${comparison.total_new}</p>
-                        <p>Entradas: ${comparison.entries.length}</p>
-                        <p>Saídas: ${comparison.exits.length}</p>
+                        <div class="stats-container">
+                            <div class="stat-box">
+                                <h3>Total na Lista Antiga</h3>
+                                <p class="stat-number">${comparison.total_old}</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3>Total na Lista Nova</h3>
+                                <p class="stat-number">${comparison.total_new}</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3>Entradas</h3>
+                                <p class="stat-number">${comparison.entries.length}</p>
+                            </div>
+                            <div class="stat-box">
+                                <h3>Saídas</h3>
+                                <p class="stat-number">${comparison.exits.length}</p>
+                            </div>
+                        </div>
                         
-                        <h3>Pessoas que Entraram</h3>
-                        <pre>${JSON.stringify(comparison.entries, null, 2)}</pre>
-                        
-                        <h3>Pessoas que Saíram</h3>
-                        <pre>${JSON.stringify(comparison.exits, null, 2)}</pre>
+                        <div class="tables-container">
+                            ${entriesTable}
+                            ${exitsTable}
+                        </div>
+                    `;
+                }
+
+                function createTable(data, title) {
+                    if (!data || data.length === 0) {
+                        return `<div class="table-section">
+                            <h2>${title}</h2>
+                            <p class="no-data">Nenhum registro encontrado</p>
+                        </div>`;
+                    }
+
+                    const headers = Object.keys(data[0]);
+                    const tableRows = data.map(item => {
+                        return `<tr>
+                            ${headers.map(header => `<td>${item[header]}</td>`).join('')}
+                        </tr>`;
+                    }).join('');
+
+                    return `
+                        <div class="table-section">
+                            <h2>${title}</h2>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            ${headers.map(header => `<th>${header}</th>`).join('')}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${tableRows}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     `;
                 }
             </script>
